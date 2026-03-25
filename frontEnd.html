@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WayV Ride Share</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f6f9;
+text-align:center;
+}
+
+.page{
+display:none;
+padding:30px;
+}
+
+input{
+display:block;
+margin:10px auto;
+padding:10px;
+width:250px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+padding:10px 20px;
+border:none;
+background:#ff6b00;
+color:white;
+border-radius:5px;
+cursor:pointer;
+margin-top:10px;
+}
+
+button:hover{
+background:#e55a00;
+}
+
+
+.logo{
+font-size:40px;
+font-weight:bold;
+color:#ff6b00;
+margin-top:150px;
+}
+
+.card{
+
+background:white;
+padding:20px;
+border-radius:10px;
+max-width:400px;
+margin:auto;
+box-shadow:0 3px 10px rgba(0,0,0,0.2);
+margin-top:20px;
+}
+
+.link{
+color:blue;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SPLASH SCREEN -->
+
+<div id="splash" class="page" style="display:block">
+
+<div class="logo">WayV</div>
+<p>Ride Sharing App</p>
+
+</div>
+
+
+<!-- LOGIN PAGE -->
+
+<div id="login" class="page">
+
+<div class="card">
+
+<h2>Login</h2>
+
+<input id="username" placeholder="Username">
+
+<input id="logpassword" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+
+<p>If you don't have account 
+<span class="link" onclick="showPage('register')">Register</span>
+</p>
+<p id="message"></p>
+
+</div>
+
+</div>
+
+
+<!-- REGISTER PAGE -->
+
+<div id="register" class="page">
+
+<div class="card">
+
+<h2>Register</h2>
+
+<input id="regUser" placeholder="Username">
+
+<input id="email" type="email" placeholder="Email">
+
+<input id="regpassword" type="password" placeholder="Password">
+
+<button onclick="register()">Register</button>
+
+<p>Already have account 
+<span class="link" onclick="showPage('login')">Login</span>
+</p>
+<p id="message1"></p>
+
+</div>
+
+</div>
+
+
+<!-- CHOICE PAGE -->
+
+<div id="choice" class="page">
+
+<h2>What do you want to do?</h2>
+
+<button onclick="showPage('travel')">Travel</button>
+
+<button onclick="showPage('lift')">Give Lift</button>
+
+</div>
+
+
+<!-- TRAVEL PAGE -->
+
+<div id="travel" class="page">
+
+<div class="card">
+
+<h2>Find Ride</h2>
+
+<input id="from" placeholder="From" onkeyup="handleSearch(this, 'fromSuggestions')">
+<div id="fromSuggestions"></div>
+
+<input id="to" placeholder="To" onkeyup="handleSearch(this, 'toSuggestions')">
+<div id="toSuggestions"></div>
+<input type="date">
+
+<button id="searchRide" onclick="SearchRide()">Search Ride</button>
+
+</div>
+<div class="card" id="result">
+    
+    
+</div>
+
+
+</div>
+
+
+<!-- GIVE LIFT PAGE -->
+
+<div id="lift" class="page">
+
+<div class="card">
+
+<h2>Offer Ride</h2>
+
+<input id="from" placeholder="From" onkeyup="handleSearch(this, 'LiftFromSuggestions')" class="from">
+<div id="LiftFromSuggestions"></div>
+<input id="to" placeholder="To" onkeyup="handleSearch(this, 'LiftToSuggestions')" class="to">
+<div id="LiftToSuggestions" ></div>
+
+
+<input type="date" class="date" >
+<input type="time" class="timeRequired" placeholder="Journey time">
+<input type="time" class="timeOfDeparture" placeholder="departure time">
+
+
+<input placeholder="Available Seats" class="seats">
+
+<input placeholder="Price per Seat" class="price">
+
+<button onclick="publish()">Publish Ride</button>
+
+</div>
+
+</div>
+
+
+<script>
+    function SearchRide(){
+        const from=document.getElementById('from').value;
+                const to=document.getElementById('to').value;
+
+        fetch(`http://localhost:8081/rides/searchRides?from=${from}&to=${to}`)
+            .then(res=>res.json())     
+            .then(data=>{
+                console.log(data)
+                const result=document.getElementById('result');
+                result.innerHTML="";
+                data.forEach(ride=>{
+                    let div=document.createElement("div");
+                    let from=ride.fromCity;
+                    let to=ride.toCity;
+                    let date=ride.date;
+                    let timeJourney=ride.time;
+                    let timeOfDeparture=ride.timeOfDeparture;
+                    let seats=ride.seats;
+                    let price=ride.price;
+                    div.innerHTML=`<div><p>from: ${from}</p>
+                           
+                           <p>to: ${to}</p>
+                           
+                           <p>date: ${date}</p>
+                           
+                           <p>journeytime: ${timeJourney}</p>
+                           <p>departure time: ${timeOfDeparture}</p>
+                           <p>seats: ${seats}</p>
+                           <p>price: ${price}</p>
+                           <button> book ride</button>
+
+                             </div>`;
+                             div.className="card";
+                             result.appendChild(div);
+                    
+
+                })
+
+            })   
+
+
+        
+
+    }
+    function publish(){
+        const from=document.querySelector('.from').value;
+        const to=document.querySelector('.to').value;
+        const date=document.querySelector('.date').value;
+                const timeRequired=document.querySelector('.timeRequired').value;
+                const timeOfDeparture=document.querySelector('.timeOfDeparture').value;
+
+
+        const seats=document.querySelector('.seats').value;
+        const price=document.querySelector('.price').value;
+
+    fetch("http://localhost:8081/rides/publish", {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({
+            fromCity:from,
+            toCity:to,
+            date:date,
+            time:timeRequired,
+            timeOfDeparture:timeOfDeparture,
+            seats:seats,
+            price:price
+        })
+    }) .then(res => res.text())
+    .then(data => {
+        console.log("Response:", data);
+       document.querySelector('.from').value="";
+        document.querySelector('.to').value="";
+       document.querySelector('.date').value="";
+                document.querySelector('.timeRequired').value="";
+                document.querySelector('.timeOfDeparture').value="";
+
+
+document.querySelector('.seats').value="";
+        document.querySelector('.price').value="";
+
+        
+    })
+    .catch(err => {
+        console.log("Error:", err);
+    });
+    }
+    
+    let timer;
+
+function handleSearch(input, boxId){
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+        if(input.value.length >= 3){
+            searchLocation(input, boxId);
+        }
+    }, 400);
+}
+    function searchLocation(input, boxId){
+
+    fetch(`http://localhost:8081/rides/search?query=${input.value}`)
+    .then(res => res.json())
+    .then(data => {
+
+        let box = document.getElementById(boxId);
+        box.innerHTML = "";
+
+        data.forEach(place => {
+
+
+            let div = document.createElement("div");
+
+            let name = place.name || place.display_name;
+            let state = place.address?.state || "";
+
+            div.innerText = name + (state ? ", " + state : "");
+
+            div.style.padding = "5px";
+            div.style.cursor = "pointer";
+
+            div.onmouseover = () => div.style.background = "#eee";
+            div.onmouseout = () => div.style.background = "white";
+
+            div.onclick = () => {
+                input.value = div.innerText;
+
+                // ✅ store lat/lon in respective input
+                input.dataset.lat = place.lat;
+                input.dataset.lon = place.lon;
+
+                box.innerHTML = "";
+            };
+
+            box.appendChild(div);
+        });
+    });
+}
+
+    
+function login(){
+    console.log("Login button clicked"); // ✅ MUST print in console
+
+    const name  = document.getElementById("username").value;
+    const password = document.getElementById("logpassword").value;
+
+    fetch("http://localhost:8081/login", {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({
+            identifier: name,
+            password: password
+        })
+    })
+    .then(res => 
+    {
+        if(!res.ok)
+      {
+        return res.json()
+    .then
+        (data=>{console.log(data);
+            throw new Error(data.message);});
+      }
+      return res.json();
+    })
+    
+    .then(data => {
+        console.log("Response:", data);
+         showPage("choice");
+        localStorage.setItem("token",data.token);
+
+       
+       
+          
+    })
+    .catch(err => {
+        console.log("Error:", err);
+        document.getElementById("message").innerText = err.message;
+    });
+    
+}
+function register(){
+    const regname = document.getElementById("regUser").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("regpassword").value;
+
+    fetch("http://localhost:8081/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username: regname,
+            email: email,
+            password: password
+        })
+    })
+    .then(res => {
+       if(!res.ok)
+    {
+       return res.json()
+.then(data=>{
+            document.getElementById("message1").innerText = data.message;
+             throw new Error(data.message);});
+    }
+return res.json();
+    })
+    .then(data => {
+        document.getElementById("message1").innerText = data.message;
+showPage("login");
+        // clear fields
+        document.getElementById("regUser").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("regpassword").value = "";
+    })
+    .catch(err => {
+        console.log(err);
+        document.getElementById("message").innerText = "Error occurred";
+    });
+    
+}
+setTimeout(function(){
+
+showPage("login");
+
+},2000);
+
+
+function showPage(page){
+
+let pages=document.querySelectorAll(".page");
+
+pages.forEach(p=>p.style.display="none");
+
+document.getElementById(page).style.display="block";
+    history.pushState({page: page}, "", "#" + page);
+
+
+}
+
+
+window.onpopstate = function(event){
+    if(event.state && event.state.page){
+        let pages = document.querySelectorAll(".page");
+        pages.forEach(p => p.style.display = "none");
+
+        document.getElementById(event.state.page).style.display = "block";
+    }
+};
+
+
+
+
+</script>
+
+</body>
+</html>
